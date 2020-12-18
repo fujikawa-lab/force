@@ -11,9 +11,12 @@ import {
 import { ArtworkDetailsAdditionalInfo_artwork } from "v2/__generated__/ArtworkDetailsAdditionalInfo_artwork.graphql"
 import React, { useState } from "react"
 import { createFragmentContainer, graphql } from "react-relay"
-
 import { RequestConditionReportQueryRenderer } from "./RequestConditionReport"
 import { ArtworkDetailsMediumModalFragmentContainer } from "../ArtworkDetailsMediumModal"
+import { useAnalyticsContext } from "v2/Artsy/Analytics/AnalyticsContext"
+import { useTracking } from "v2/Artsy"
+import { ContextModule } from "@artsy/cohesion"
+import * as Schema from "v2/Artsy/Analytics/Schema"
 
 export interface ArtworkDetailsAdditionalInfoProps {
   artwork: ArtworkDetailsAdditionalInfo_artwork
@@ -38,6 +41,13 @@ export const ArtworkDetailsAdditionalInfo: React.FC<ArtworkDetailsAdditionalInfo
 
   const [open, setOpen] = useState(false)
 
+  const { trackEvent } = useTracking()
+  const {
+    contextPageOwnerId,
+    contextPageOwnerSlug,
+    contextPageOwnerType,
+  } = useAnalyticsContext()
+
   const listItems = [
     {
       title: "Medium",
@@ -46,7 +56,18 @@ export const ArtworkDetailsAdditionalInfo: React.FC<ArtworkDetailsAdditionalInfo
           {artwork.mediumType ? (
             <>
               <Clickable
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                  setOpen(true)
+
+                  trackEvent({
+                    context_module: ContextModule.aboutTheWork,
+                    type: Schema.Type.Link,
+                    subject: "Medium type info",
+                    context_page_owner_type: contextPageOwnerType,
+                    context_page_owner_id: contextPageOwnerId,
+                    context_page_owner_slug: contextPageOwnerSlug,
+                  })
+                }}
                 textDecoration="underline"
                 color="black60"
               >
